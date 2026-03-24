@@ -25,4 +25,12 @@
     <color name="fabColor">#4B7BEC</color>
     <color name="fabIconColor">#FFFFFFFF</color>
     <color name="badgeBlue">#4B7BEC</color>
+
+    <color name="musicPrimary">#6C5CE7</color>
+    <color name="musicSecondary">#A29BFE</color>
+    <color name="musicGradientStart">#6C5CE7</color>
+    <color name="musicGradientEnd">#A29BFE</color>
+    <color name="nowPlayingBg">#1A6C5CE7</color>
+    <color name="miniPlayerBg">#6C5CE7</color>
+    <color name="musicTextOnPrimary">#FFFFFF</color>
 </resources>

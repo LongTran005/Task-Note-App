@@ -40,98 +40,57 @@
                     android:textStyle="bold" />
 
                 <LinearLayout
-                    android:id="@+id/layout_selection_actions"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="end"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:visibility="gone">
-
-                    <ImageButton
-                        android:id="@+id/btn_multi_delete"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:src="@drawable/ic_delete"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        app:tint="@color/colorPrimary"
-                        android:contentDescription="Delete Selected" />
-
-                    <ImageButton
-                        android:id="@+id/btn_multi_share"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:src="@drawable/ic_share"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        app:tint="@color/colorPrimary"
-                        android:contentDescription="Share Selected" />
-
-                    <ImageButton
-                        android:id="@+id/btn_cancel_selection"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:src="@drawable/ic_add"
-                        android:rotation="45"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        app:tint="@color/textSecondary"
-                        android:contentDescription="Cancel" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/layout_normal_actions"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="end"
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
 
-                    <LinearLayout
-                        android:id="@+id/btn_calendar_3d"
-                        android:layout_width="wrap_content"
-                        android:layout_height="36dp"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
+                    <FrameLayout
+                        android:id="@+id/btn_notification"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
                         android:layout_marginEnd="4dp"
+                        android:clickable="true"
+                        android:focusable="true"
                         android:background="?attr/selectableItemBackgroundBorderless">
 
                         <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:src="@drawable/ic_calendar_3d"
-                            android:contentDescription="Calendar" />
+                            android:id="@+id/iv_notification_icon"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_notification_off"
+                            android:contentDescription="Notifications" />
 
                         <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="4dp"
-                            android:text="@string/calendar_3d"
-                            android:textColor="@color/textPrimary"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-
-                    <ImageButton
-                        android:id="@+id/btn_more"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:src="@drawable/ic_more_vert"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:contentDescription="More"
-                        android:scaleType="centerInside" />
+                            android:id="@+id/tv_notification_badge"
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="top|end"
+                            android:layout_marginTop="4dp"
+                            android:layout_marginEnd="2dp"
+                            android:background="@color/colorPrimary"
+                            android:gravity="center"
+                            android:textColor="@android:color/white"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:visibility="gone" />
+                    </FrameLayout>
                 </LinearLayout>
 
             </androidx.appcompat.widget.Toolbar>
         </com.google.android.material.appbar.AppBarLayout>
 
         <FrameLayout
+            android:id="@+id/fragment_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:paddingBottom="56dp"
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
             <LinearLayout
-                android:id="@+id/fragment_container"
+                android:id="@+id/fragment_content_wrapper"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical" />
@@ -197,10 +156,17 @@
             app:tint="@color/fabIconColor"
             app:fabSize="normal" />
 
+        <include
+            layout="@layout/layout_mini_player"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_marginBottom="56dp" />
+
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottom_navigation"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:background="@color/bottomNavBackground"
             app:itemIconTint="@color/bottomNavInactive"

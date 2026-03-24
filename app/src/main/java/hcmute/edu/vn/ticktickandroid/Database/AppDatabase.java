@@ -16,13 +16,16 @@ import hcmute.edu.vn.ticktickandroid.Notification.NotificationEntity;
 import hcmute.edu.vn.ticktickandroid.Task.TaskEntity;
 import hcmute.edu.vn.ticktickandroid.Task.TaskDao;
 
-@Database(entities = {Category.class, TaskEntity.class, NotificationEntity.class}, version = 3, exportSchema = false)
+import hcmute.edu.vn.ticktickandroid.Contact.ContactEntity;
+
+@Database(entities = {Category.class, TaskEntity.class, NotificationEntity.class, ContactEntity.class}, version = 4, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
     private static volatile AppDatabase INSTANCE;
 
     public abstract CategoryDao categoryDao();
     public abstract TaskDao taskDao();
     public abstract NotificationDao notificationDao();
+    public abstract hcmute.edu.vn.ticktickandroid.Contact.ContactDao contactDao();
 
     static final Migration MIGRATION_1_2 = new Migration(1, 2) {
         @Override
@@ -45,6 +48,16 @@ public abstract class AppDatabase extends RoomDatabase {
         }
     };
 
+    static final Migration MIGRATION_3_4 = new Migration(3, 4) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS contacts (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                    "name TEXT, " +
+                    "phoneNumber TEXT)");
+        }
+    };
+
     public static AppDatabase getInstance(Context context) {
         if (INSTANCE == null) {
             synchronized (AppDatabase.class) {
@@ -54,7 +67,7 @@ public abstract class AppDatabase extends RoomDatabase {
                             AppDatabase.class,
                             "ticktick_db"
                     ).allowMainThreadQueries()
-                     .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                     .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                      .build();
 
                     if (INSTANCE.categoryDao().getCount() == 0) {

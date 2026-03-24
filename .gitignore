@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+gradle_output.txt
+gradle_output_utf8.txt

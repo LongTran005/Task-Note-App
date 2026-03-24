@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/mini_player"
+    android:layout_width="match_parent"
+    android:layout_height="56dp"
+    android:background="@drawable/bg_mini_player"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingStart="12dp"
+    android:paddingEnd="8dp"
+    android:elevation="8dp"
+    android:visibility="gone"
+    android:clickable="true"
+    android:focusable="true">
+
+    <!-- Music icon -->
+    <ImageView
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:src="@drawable/ic_music_note"
+        app:tint="@color/musicTextOnPrimary"
+        android:contentDescription="Music" />
+
+    <!-- Song name -->
+    <TextView
+        android:id="@+id/tv_mini_player_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Đang phát nhạc..."
+        android:textColor="@color/musicTextOnPrimary"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:singleLine="true"
+        android:ellipsize="marquee"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="8dp" />
+
+    <!-- Play/Pause button -->
+    <ImageButton
+        android:id="@+id/btn_mini_play_pause"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_pause"
+        app:tint="@color/musicTextOnPrimary"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Play/Pause" />
+
+    <!-- Stop/Close button -->
+    <ImageButton
+        android:id="@+id/btn_mini_stop"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_close"
+        app:tint="#B3FFFFFF"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Stop" />
+
+</LinearLayout>
