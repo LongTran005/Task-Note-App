@@ -13,6 +13,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ExpandableListView;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -46,11 +47,12 @@ import hcmute.edu.vn.ticktickandroid.Adapter.TaskExpandableListAdapter;
 import hcmute.edu.vn.ticktickandroid.Category.Category;
 import hcmute.edu.vn.ticktickandroid.Category.CategoryDao;
 import hcmute.edu.vn.ticktickandroid.Database.AppDatabase;
-import hcmute.edu.vn.ticktickandroid.Dialog.CategoryDialogHelper;
 import hcmute.edu.vn.ticktickandroid.Dialog.TaskDialogHelper;
 import hcmute.edu.vn.ticktickandroid.Fragment.ContactFragment;
 import hcmute.edu.vn.ticktickandroid.Fragment.MusicPickerFragment;
+import hcmute.edu.vn.ticktickandroid.Fragment.NotificationFragment;
 import hcmute.edu.vn.ticktickandroid.Fragment.TimerFragment;
+import hcmute.edu.vn.ticktickandroid.Notification.NotificationDao;
 import hcmute.edu.vn.ticktickandroid.Service.TaskReminderService;
 import hcmute.edu.vn.ticktickandroid.Task.TaskDao;
 import hcmute.edu.vn.ticktickandroid.Task.TaskEntity;
@@ -65,8 +67,13 @@ public class MainActivity extends AppCompatActivity {
     private ExpandableListView expandableListView;
     private LinearLayout emptyState;
 
+    private View btnNotification;
+    private ImageView ivNotificationIcon;
+    private TextView tvNotificationBadge;
+
     private CategoryDao categoryDao;
     private TaskDao taskDao;
+    private NotificationDao notificationDao;
 
     private List<Category> categories = new ArrayList<>();
     private Category currentCategory = null;
@@ -74,13 +81,15 @@ public class MainActivity extends AppCompatActivity {
     private List<String> groupList = new ArrayList<>();
     private Map<String, List<TaskEntity>> taskMap = new LinkedHashMap<>();
 
-    private RecyclerView rvDrawerCategories;
     private DrawerCategoryAdapter drawerAdapter;
     private TaskExpandableListAdapter taskAdapter;
 
     private TimerFragment timerFragment;
     private ContactFragment contactFragment;
     private MusicPickerFragment musicPickerFragment;
+    private NotificationFragment notificationFragment;
+
+    private int lastUiState = R.id.nav_tasks;
 
     private TaskReminderService taskReminderService;
     private boolean isBound = false;
@@ -89,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
             registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
                 Boolean contactsGranted = result.getOrDefault(Manifest.permission.READ_CONTACTS, false);
                 Boolean smsGranted = result.getOrDefault(Manifest.permission.SEND_SMS, false);
-                if (contactsGranted && smsGranted) {
+                if (contactsGranted != null && contactsGranted && smsGranted != null && smsGranted) {
                     Toast.makeText(this, "Đã cấp quyền danh bạ và SMS", Toast.LENGTH_SHORT).show();
                 }
             });
@@ -100,6 +109,7 @@ public class MainActivity extends AppCompatActivity {
             TaskReminderService.LocalBinder binder = (TaskReminderService.LocalBinder) service;
             taskReminderService = binder.getService();
             isBound = true;
+            taskReminderService.setNotificationListener(MainActivity.this::updateNotificationBadge);
         }
         @Override
         public void onServiceDisconnected(ComponentName name) { isBound = false; }
@@ -134,8 +144,17 @@ public class MainActivity extends AppCompatActivity {
         fabAdd.setOnClickListener(v ->
                 TaskDialogHelper.showAddDialog(this, taskDao, categoryDao, currentCategory, this::refreshAll));
 
+        btnNotification.setOnClickListener(v -> showNotificationUi());
+
+        findViewById(R.id.fragment_container).setOnClickListener(v -> {
+            if (taskAdapter != null && taskAdapter.isSelectionMode()) {
+                taskAdapter.setSelectionMode(false);
+            }
+        });
+
         refreshTaskList();
         updateFabVisibility();
+        updateNotificationBadge();
 
         Intent intent = new Intent(this, TaskReminderService.class);
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
@@ -163,6 +182,7 @@ public class MainActivity extends AppCompatActivity {
         AppDatabase db = AppDatabase.getInstance(this);
         categoryDao = db.categoryDao();
         taskDao = db.taskDao();
+        notificationDao = db.notificationDao();
     }
 
     private void bindViews() {
@@ -172,6 +192,10 @@ public class MainActivity extends AppCompatActivity {
         fabAdd = findViewById(R.id.fab_add);
         expandableListView = findViewById(R.id.expandable_task_list);
         emptyState = findViewById(R.id.empty_state);
+
+        btnNotification = findViewById(R.id.btn_notification);
+        ivNotificationIcon = findViewById(R.id.iv_notification_icon);
+        tvNotificationBadge = findViewById(R.id.tv_notification_badge);
     }
 
     private void setupToolbar() {
@@ -189,6 +213,7 @@ public class MainActivity extends AppCompatActivity {
     private void setupBottomNav() {
         bottomNavigationView.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
+            lastUiState = itemId;
             if (itemId == R.id.nav_tasks) {
                 showTasksUi();
                 return true;
@@ -204,12 +229,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showTasksUi() {
-        emptyState.setVisibility(taskMap.isEmpty() ? View.VISIBLE : View.GONE);
-        expandableListView.setVisibility(taskMap.isEmpty() ? View.GONE : View.VISIBLE);
         toolbarTitle.setText(currentCategory != null ? currentCategory.getName() : "Công việc");
-        updateFabVisibility();
-        
         hideAllFragments();
+        refreshTaskList(); 
+        updateFabVisibility();
     }
 
     private void showContactsUi() {
@@ -251,14 +274,43 @@ public class MainActivity extends AppCompatActivity {
         hideAllFragments();
         if (musicPickerFragment == null) {
             musicPickerFragment = new MusicPickerFragment();
+            musicPickerFragment.setListener(new MusicPickerFragment.OnMusicSelectedListener() {
+                @Override public void onMusicSelected(int resId, String name) {}
+                @Override public void onFileSelected(android.net.Uri uri, String name) {}
+                @Override public void onPauseMusic() {}
+                @Override public void onResumeMusic() {}
+                @Override public void onStopMusic() {}
+                @Override public void onBack() { 
+                    if (lastUiState == R.id.nav_tasks) showTasksUi();
+                    else if (lastUiState == R.id.nav_contacts) showContactsUi();
+                    else if (lastUiState == R.id.nav_timer) showTimerUi();
+                    else showTasksUi();
+                }
+            });
             getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, musicPickerFragment).commit();
         } else {
             getSupportFragmentManager().beginTransaction().show(musicPickerFragment).commit();
         }
     }
 
+    private void showNotificationUi() {
+        emptyState.setVisibility(View.GONE);
+        expandableListView.setVisibility(View.GONE);
+        fabAdd.hide();
+        toolbarTitle.setText("Thông báo");
+
+        hideAllFragments();
+        if (notificationFragment == null) {
+            notificationFragment = new NotificationFragment();
+            getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, notificationFragment).commit();
+        } else {
+            getSupportFragmentManager().beginTransaction().show(notificationFragment).commit();
+        }
+        updateNotificationBadge();
+    }
+
     private void hideAllFragments() {
-        Fragment[] fragments = {timerFragment, contactFragment, musicPickerFragment};
+        Fragment[] fragments = {timerFragment, contactFragment, musicPickerFragment, notificationFragment};
         for (Fragment f : fragments) {
             if (f != null && f.isAdded()) {
                 getSupportFragmentManager().beginTransaction().hide(f).commit();
@@ -267,7 +319,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupDrawer() {
-        rvDrawerCategories = findViewById(R.id.rv_drawer_categories);
+        RecyclerView rvDrawerCategories = findViewById(R.id.rv_drawer_categories);
         rvDrawerCategories.setLayoutManager(new LinearLayoutManager(this));
         drawerAdapter = new DrawerCategoryAdapter(new ArrayList<>(), new LinkedHashMap<>(),
                 new DrawerCategoryAdapter.OnCategoryActionListener() {
@@ -277,7 +329,6 @@ public class MainActivity extends AppCompatActivity {
                         toolbarTitle.setText(category.getName());
                         drawerLayout.closeDrawer(GravityCompat.START);
                         showTasksUi();
-                        refreshTaskList();
                     }
                     @Override public void onEdit(Category category) {}
                     @Override public void onDelete(Category category) {}
@@ -291,19 +342,19 @@ public class MainActivity extends AppCompatActivity {
         refreshTaskList();
     }
 
+    private void refreshDrawerCategories() {
+        categories = categoryDao.getAll();
+        Map<Integer, Integer> counts = new LinkedHashMap<>();
+        for (Category c : categories) counts.put(c.getId(), taskDao.getByCategoryId(c.getId()).size());
+        drawerAdapter.updateData(categories, counts);
+    }
+
     private void updateFabVisibility() {
         if (bottomNavigationView.getSelectedItemId() == R.id.nav_tasks && currentCategory != null) {
             fabAdd.show();
         } else {
             fabAdd.hide();
         }
-    }
-
-    private void refreshDrawerCategories() {
-        categories = categoryDao.getAll();
-        Map<Integer, Integer> counts = new LinkedHashMap<>();
-        for (Category c : categories) counts.put(c.getId(), taskDao.getByCategoryId(c.getId()).size());
-        drawerAdapter.updateData(categories, counts);
     }
 
     private void refreshTaskList() {
@@ -316,35 +367,128 @@ public class MainActivity extends AppCompatActivity {
                 taskMap.put(catName, new ArrayList<>());
                 groupList.add(catName);
             }
-            taskMap.get(catName).add(t);
+            List<TaskEntity> list = taskMap.get(catName);
+            if (list != null) list.add(t);
         }
+
+        if (taskMap.isEmpty()) {
+            emptyState.setVisibility(View.VISIBLE);
+            expandableListView.setVisibility(View.GONE);
+        } else {
+            emptyState.setVisibility(View.GONE);
+            expandableListView.setVisibility(View.VISIBLE);
+        }
+
         taskAdapter = new TaskExpandableListAdapter(this, groupList, taskMap, new TaskExpandableListAdapter.OnTaskActionListener() {
             @Override public void onTaskCheckedChanged(TaskEntity task, boolean isChecked) {
                 task.setCompleted(isChecked);
                 taskDao.update(task);
+                refreshDrawerCategories();
+                refreshTaskList();
             }
-            @Override public void onTaskLongClick(TaskEntity task) {}
-            @Override public void onSelectionModeChanged(boolean enabled) {}
+            @Override public void onTaskLongClick(TaskEntity task) {
+                TaskDialogHelper.showEditDialog(MainActivity.this, task, taskDao, categoryDao, MainActivity.this::refreshAll);
+            }
+            @Override public void onSelectionModeChanged(boolean enabled) {
+                if (enabled) {
+                    toolbarTitle.setText(String.valueOf(taskAdapter.getSelectedTasks().size()) + " đã chọn");
+                    fabAdd.hide();
+                } else {
+                    toolbarTitle.setText(currentCategory != null ? currentCategory.getName() : "Công việc");
+                    updateFabVisibility();
+                }
+                invalidateOptionsMenu();
+            }
         });
         expandableListView.setAdapter(taskAdapter);
         for (int i = 0; i < groupList.size(); i++) expandableListView.expandGroup(i);
+        
+        if (taskAdapter == null || !taskAdapter.isSelectionMode()) {
+            updateFabVisibility();
+        }
+    }
+
+    private void updateNotificationBadge() {
+        new Thread(() -> {
+            int unreadCount = notificationDao.getUnreadCount();
+            runOnUiThread(() -> {
+                if (unreadCount > 0) {
+                    tvNotificationBadge.setVisibility(View.VISIBLE);
+                    tvNotificationBadge.setText(String.valueOf(unreadCount));
+                    ivNotificationIcon.setImageResource(R.drawable.ic_notification_on);
+                } else {
+                    tvNotificationBadge.setVisibility(View.GONE);
+                    ivNotificationIcon.setImageResource(R.drawable.ic_notification_off);
+                }
+            });
+        }).start();
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.extra_menu, menu);
-        MenuItem manageContacts = menu.findItem(R.id.action_manage_contacts);
-        if (manageContacts != null) manageContacts.setVisible(false);
         return true;
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        boolean isSelection = taskAdapter != null && taskAdapter.isSelectionMode();
+        MenuItem deleteItem = menu.findItem(R.id.action_delete_selected);
+        MenuItem shareItem = menu.findItem(R.id.action_share_selected);
+        MenuItem musicItem = menu.findItem(R.id.action_pick_music);
+        
+        if (deleteItem != null) deleteItem.setVisible(isSelection);
+        if (shareItem != null) shareItem.setVisible(isSelection);
+        if (musicItem != null) musicItem.setVisible(!isSelection);
+        
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.action_pick_music) {
+        int id = item.getItemId();
+        if (id == R.id.action_pick_music) {
             showMusicPickerUi();
+            return true;
+        } else if (id == R.id.action_delete_selected) {
+            deleteSelectedTasks();
+            return true;
+        } else if (id == R.id.action_share_selected) {
+            shareSelectedTasks();
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void deleteSelectedTasks() {
+        List<TaskEntity> selected = taskAdapter.getSelectedTasks();
+        if (selected.isEmpty()) return;
+        
+        new Thread(() -> {
+            for (TaskEntity task : selected) {
+                taskDao.delete(task);
+            }
+            runOnUiThread(() -> {
+                taskAdapter.setSelectionMode(false);
+                refreshAll();
+                Toast.makeText(this, "Đã xóa " + selected.size() + " nhiệm vụ", Toast.LENGTH_SHORT).show();
+            });
+        }).start();
+    }
+
+    private void shareSelectedTasks() {
+        List<TaskEntity> selected = taskAdapter.getSelectedTasks();
+        if (selected.isEmpty()) return;
+        
+        StringBuilder sb = new StringBuilder("Nhiệm vụ của tôi:\n");
+        for (TaskEntity t : selected) {
+            sb.append("- ").append(t.getTitle()).append(t.isCompleted() ? " (X)" : "").append("\n");
+        }
+        
+        Intent intent = new Intent(this, ContactActivity.class);
+        intent.putExtra("TASK_CONTENT", sb.toString());
+        startActivity(intent);
+        taskAdapter.setSelectionMode(false);
     }
 
     @Override
@@ -353,6 +497,22 @@ public class MainActivity extends AppCompatActivity {
         if (isBound) {
             unbindService(serviceConnection);
             isBound = false;
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        } else if (taskAdapter != null && taskAdapter.isSelectionMode()) {
+            taskAdapter.setSelectionMode(false);
+        } else if (musicPickerFragment != null && musicPickerFragment.isVisible()) {
+            if (lastUiState == R.id.nav_tasks) showTasksUi();
+            else if (lastUiState == R.id.nav_contacts) showContactsUi();
+            else if (lastUiState == R.id.nav_timer) showTimerUi();
+            else super.onBackPressed();
+        } else {
+            super.onBackPressed();
         }
     }
 }

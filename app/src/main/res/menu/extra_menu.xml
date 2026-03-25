@@ -2,6 +2,18 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/action_delete_selected"
+        android:title="Xóa đã chọn"
+        android:icon="@drawable/ic_delete"
+        android:visible="false"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_share_selected"
+        android:title="Chia sẻ đã chọn"
+        android:icon="@drawable/ic_share"
+        android:visible="false"
+        app:showAsAction="ifRoom" />
+    <item
         android:id="@+id/action_pick_music"
         android:title="Chọn nhạc nền"
         app:showAsAction="never" />

@@ -57,24 +57,5 @@
                 android:textSize="13sp" />
         </LinearLayout>
 
-        <ImageButton
-            android:id="@+id/btn_edit_contact"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:src="@drawable/ic_edit"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            app:tint="@color/textSecondary"
-            android:padding="4dp"
-            android:layout_marginEnd="4dp" />
-
-        <ImageButton
-            android:id="@+id/btn_delete_contact"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:src="@drawable/ic_delete"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            app:tint="@color/textSecondary"
-            android:padding="4dp" />
-
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>
