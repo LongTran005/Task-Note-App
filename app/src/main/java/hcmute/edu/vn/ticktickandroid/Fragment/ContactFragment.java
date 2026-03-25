@@ -1,4 +1,4 @@
-package hcmute.edu.vn.ticktickandroid;
+package hcmute.edu.vn.ticktickandroid.Fragment;
 
 import android.app.AlertDialog;
 import android.content.ContentResolver;
@@ -11,52 +11,47 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import hcmute.edu.vn.ticktickandroid.R;
 import hcmute.edu.vn.ticktickandroid.Service.SmsService;
 
-public class ContactActivity extends AppCompatActivity {
+public class ContactFragment extends Fragment {
 
     private RecyclerView rvContacts;
     private List<ContactModel> contactList = new ArrayList<>();
     private ContactAdapter adapter;
-    private String taskMessage;
 
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_contact);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_contact, container, false);
 
-        Toolbar toolbar = findViewById(R.id.toolbar_contact);
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayShowTitleEnabled(false);
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        }
-        toolbar.setNavigationOnClickListener(v -> finish());
-
-        taskMessage = getIntent().getStringExtra("TASK_CONTENT");
-        rvContacts = findViewById(R.id.rv_contacts);
-        rvContacts.setLayoutManager(new LinearLayoutManager(this));
+        rvContacts = view.findViewById(R.id.rv_contacts_fragment);
+        rvContacts.setLayoutManager(new LinearLayoutManager(getContext()));
 
         loadContacts();
 
         adapter = new ContactAdapter(contactList, contact -> showChatBox(contact.name, contact.phone));
         rvContacts.setAdapter(adapter);
+
+        return view;
     }
 
     private void loadContacts() {
-        ContentResolver contentResolver = getContentResolver();
+        contactList.clear();
+        ContentResolver contentResolver = getContext().getContentResolver();
         Cursor cursor = contentResolver.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
                 null, null, null, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC");
 
@@ -73,8 +68,8 @@ public class ContactActivity extends AppCompatActivity {
     }
 
     private void showChatBox(String name, String phoneNumber) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_chat_box, null);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_chat_box, null);
         builder.setView(dialogView);
 
         TextView tvRecipient = dialogView.findViewById(R.id.tv_chat_recipient);
@@ -82,40 +77,32 @@ public class ContactActivity extends AppCompatActivity {
         View btnSend = dialogView.findViewById(R.id.btn_chat_send);
 
         tvRecipient.setText("Gửi đến: " + name);
-        if (taskMessage != null) etMessage.setText("Task: " + taskMessage);
-
         etMessage.requestFocus();
+        
         AlertDialog dialog = builder.create();
-
         btnSend.setOnClickListener(v -> {
             String message = etMessage.getText().toString().trim();
             if (!message.isEmpty()) {
-                Intent intent = new Intent(this, SmsService.class);
+                Intent intent = new Intent(getContext(), SmsService.class);
                 intent.putExtra("PHONE_NUMBER", phoneNumber);
                 intent.putExtra("MESSAGE", message);
-                startService(intent);
-                Toast.makeText(this, "Đang gửi...", Toast.LENGTH_SHORT).show();
+                getContext().startService(intent);
                 dialog.dismiss();
             }
         });
 
-        // Tự động hiển thị bàn phím
         if (dialog.getWindow() != null) {
             dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
         }
         dialog.show();
     }
 
-    // --- Lớp dữ liệu và Adapter cho RecyclerView ---
-    
     private static class ContactModel {
         String name, phone;
         ContactModel(String name, String phone) { this.name = name; this.phone = phone; }
     }
 
-    private interface OnContactClickListener {
-        void onContactClick(ContactModel contact);
-    }
+    private interface OnContactClickListener { void onContactClick(ContactModel contact); }
 
     private static class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHolder> {
         private final List<ContactModel> contacts;
@@ -129,8 +116,7 @@ public class ContactActivity extends AppCompatActivity {
         @NonNull
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            // Sử dụng layout mặc định của Android cho 2 dòng text
-            View view = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_2, parent, false);
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_contact, parent, false);
             return new ViewHolder(view);
         }
 
@@ -149,10 +135,8 @@ public class ContactActivity extends AppCompatActivity {
             TextView tvName, tvPhone;
             ViewHolder(View v) {
                 super(v);
-                tvName = v.findViewById(android.R.id.text1);
-                tvPhone = v.findViewById(android.R.id.text2);
-                tvName.setTextColor(0xFF000000); // Màu đen cho tên
-                tvPhone.setTextColor(0xFF666666); // Màu xám cho số điện thoại
+                tvName = v.findViewById(R.id.tv_contact_name);
+                tvPhone = v.findViewById(R.id.tv_contact_phone);
             }
         }
     }
