@@ -3,13 +3,13 @@
     <item
         android:id="@+id/nav_tasks"
         android:icon="@drawable/ic_check_circle"
-        android:title="@string/nav_tasks" />
+        android:title="Công việc" />
     <item
-        android:id="@+id/nav_calendar"
-        android:icon="@drawable/ic_calendar"
-        android:title="@string/nav_calendar" />
+        android:id="@+id/nav_contacts"
+        android:icon="@drawable/ic_contacts"
+        android:title="Danh bạ" />
     <item
         android:id="@+id/nav_timer"
         android:icon="@drawable/ic_timer"
-        android:title="@string/nav_timer" />
+        android:title="Tập trung" />
 </menu>

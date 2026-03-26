@@ -14,7 +14,6 @@ import android.widget.TextView;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -126,7 +125,6 @@ public class TaskExpandableListAdapter extends BaseExpandableListAdapter {
 
         tvTitle.setText(task.getTitle());
         
-        // Cấu hình UI dựa trên Selection Mode
         if (isSelectionMode) {
             btnEdit.setVisibility(View.GONE);
             btnShareSms.setVisibility(View.GONE);
@@ -138,10 +136,11 @@ public class TaskExpandableListAdapter extends BaseExpandableListAdapter {
                 } else {
                     selectedTasks.remove(task);
                 }
-                if (listener != null) listener.onSelectionModeChanged(true); // Để cập nhật count trên UI
+                if (listener != null) listener.onSelectionModeChanged(true);
             });
             
             convertView.setOnClickListener(v -> checkBox.setChecked(!checkBox.isChecked()));
+            convertView.setOnLongClickListener(null);
         } else {
             btnEdit.setVisibility(View.VISIBLE);
             btnShareSms.setVisibility(View.VISIBLE);
@@ -159,16 +158,21 @@ public class TaskExpandableListAdapter extends BaseExpandableListAdapter {
                 if (listener != null) listener.onTaskCheckedChanged(task, isChecked);
             });
 
-            convertView.setOnClickListener(null);
+            convertView.setOnClickListener(v -> {
+                // If user clicks item but not checkbox in normal mode, toggle checkbox
+                checkBox.setChecked(!checkBox.isChecked());
+            });
+            
             convertView.setOnLongClickListener(v -> {
                 setSelectionMode(true);
-                checkBox.setChecked(true);
+                if (!selectedTasks.contains(task)) selectedTasks.add(task);
+                notifyDataSetChanged();
                 return true;
             });
         }
 
-        // Style cho text
-        if (!isSelectionMode && task.isCompleted()) {
+        // Apply strike-through consistently
+        if (task.isCompleted()) {
             tvTitle.setPaintFlags(tvTitle.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
             tvTitle.setAlpha(0.5f);
         } else {
