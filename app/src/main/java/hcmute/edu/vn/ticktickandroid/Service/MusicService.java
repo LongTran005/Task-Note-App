@@ -16,6 +16,8 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 import android.provider.Settings;
+import android.util.Log;
+import android.view.ContextThemeWrapper;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -303,90 +305,99 @@ public class MusicService extends Service {
     // ==================== Floating Window ====================
 
     public void showFloatingPlayer() {
+        Log.d("MusicService", "showFloatingPlayer called, isFloatingVisible=" + isFloatingVisible + ", state=" + currentState);
         if (isFloatingVisible) {
             updateFloatingPlayer();
             return;
         }
         if (!Settings.canDrawOverlays(this)) {
+            Log.d("MusicService", "Cannot draw overlays - permission not granted");
             return;
         }
         if (currentState == STATE_IDLE) {
+            Log.d("MusicService", "State is IDLE, not showing");
             return;
         }
 
-        windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-
-        int layoutType;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            layoutType = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
-        } else {
-            layoutType = WindowManager.LayoutParams.TYPE_PHONE;
-        }
-
-        final WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                layoutType,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-                PixelFormat.TRANSLUCENT);
-        params.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
-        params.y = 0;
-
-        LayoutInflater inflater = LayoutInflater.from(this);
-        floatingView = inflater.inflate(R.layout.layout_mini_player, null);
-        floatingView.setVisibility(View.VISIBLE);
-
-        // Wire up controls
-        TextView tvName = floatingView.findViewById(R.id.tv_mini_player_name);
-        ImageButton btnPlayPause = floatingView.findViewById(R.id.btn_mini_play_pause);
-        ImageButton btnStop = floatingView.findViewById(R.id.btn_mini_stop);
-
-        tvName.setText(currentMusicName);
-        btnPlayPause.setImageResource(currentState == STATE_PLAYING ? R.drawable.ic_pause : R.drawable.ic_play);
-
-        btnPlayPause.setOnClickListener(v -> {
-            if (currentState == STATE_PLAYING) {
-                pauseMusic();
-            } else if (currentState == STATE_PAUSED) {
-                resumeMusic();
-            }
-            updateFloatingPlayer();
-        });
-
-        btnStop.setOnClickListener(v -> {
-            stopMusic();
-            hideFloatingPlayer();
-        });
-
-        // Drag support
-        floatingView.setOnTouchListener(new View.OnTouchListener() {
-            private int initialY;
-            private float initialTouchY;
-
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        initialY = params.y;
-                        initialTouchY = event.getRawY();
-                        return true;
-                    case MotionEvent.ACTION_MOVE:
-                        // Invert because gravity is BOTTOM
-                        params.y = initialY - (int) (event.getRawY() - initialTouchY);
-                        if (windowManager != null && floatingView != null) {
-                            windowManager.updateViewLayout(floatingView, params);
-                        }
-                        return true;
-                }
-                return false;
-            }
-        });
-
         try {
+            Log.d("MusicService", "Creating floating view for: " + currentMusicName);
+
+            windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+
+            int layoutType;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                layoutType = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+            } else {
+                layoutType = WindowManager.LayoutParams.TYPE_PHONE;
+            }
+
+            final WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.WRAP_CONTENT,
+                    layoutType,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                    PixelFormat.TRANSLUCENT);
+            params.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+            params.y = 0;
+
+            // Use ContextThemeWrapper to provide theme attrs (e.g. ?attr/selectableItemBackgroundBorderless)
+            Context themedContext = new ContextThemeWrapper(this, R.style.Base_Theme_TickTickAndroid);
+            LayoutInflater inflater = LayoutInflater.from(themedContext);
+            floatingView = inflater.inflate(R.layout.layout_mini_player, null);
+            floatingView.setVisibility(View.VISIBLE);
+
+            // Wire up controls
+            TextView tvName = floatingView.findViewById(R.id.tv_mini_player_name);
+            ImageButton btnPlayPause = floatingView.findViewById(R.id.btn_mini_play_pause);
+            ImageButton btnStop = floatingView.findViewById(R.id.btn_mini_stop);
+
+            tvName.setText(currentMusicName);
+            btnPlayPause.setImageResource(currentState == STATE_PLAYING ? R.drawable.ic_pause : R.drawable.ic_play);
+
+            btnPlayPause.setOnClickListener(v -> {
+                if (currentState == STATE_PLAYING) {
+                    pauseMusic();
+                } else if (currentState == STATE_PAUSED) {
+                    resumeMusic();
+                }
+                updateFloatingPlayer();
+            });
+
+            btnStop.setOnClickListener(v -> {
+                stopMusic();
+                hideFloatingPlayer();
+            });
+
+            // Drag support
+            floatingView.setOnTouchListener(new View.OnTouchListener() {
+                private int initialY;
+                private float initialTouchY;
+
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    switch (event.getAction()) {
+                        case MotionEvent.ACTION_DOWN:
+                            initialY = params.y;
+                            initialTouchY = event.getRawY();
+                            return true;
+                        case MotionEvent.ACTION_MOVE:
+                            params.y = initialY - (int) (event.getRawY() - initialTouchY);
+                            if (windowManager != null && floatingView != null) {
+                                windowManager.updateViewLayout(floatingView, params);
+                            }
+                            return true;
+                    }
+                    return false;
+                }
+            });
+
             windowManager.addView(floatingView, params);
             isFloatingVisible = true;
+            Log.d("MusicService", "Floating view added successfully");
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e("MusicService", "Failed to show floating player", e);
+            floatingView = null;
+            isFloatingVisible = false;
         }
     }
 

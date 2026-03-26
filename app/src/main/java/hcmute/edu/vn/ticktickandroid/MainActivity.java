@@ -309,6 +309,7 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onFileSelected(Uri uri, String name) {
+                    checkOverlayPermission();
                     Intent intent = new Intent(MainActivity.this, hcmute.edu.vn.ticktickandroid.Service.MusicService.class);
                     intent.setAction(hcmute.edu.vn.ticktickandroid.Service.MusicService.ACTION_PLAY);
                     intent.putExtra(hcmute.edu.vn.ticktickandroid.Service.MusicService.EXTRA_URI, uri.toString());
@@ -567,8 +568,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onUserLeaveHint() {
-        super.onUserLeaveHint();
+    protected void onStop() {
+        super.onStop();
+        // App went to background => show floating player if music is playing
         if (isMusicBound && musicService != null && musicService.getCurrentState() != MusicService.STATE_IDLE) {
             musicService.showFloatingPlayer();
         }
@@ -577,6 +579,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        // User came back to app => hide floating player
         if (isMusicBound && musicService != null) {
             musicService.hideFloatingPlayer();
         }
