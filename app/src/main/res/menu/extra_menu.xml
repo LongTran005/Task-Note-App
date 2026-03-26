@@ -17,8 +17,4 @@
         android:id="@+id/action_pick_music"
         android:title="Chọn nhạc nền"
         app:showAsAction="never" />
-    <item
-        android:id="@+id/action_manage_contacts"
-        android:title="Quản lý danh bạ"
-        app:showAsAction="never" />
 </menu>

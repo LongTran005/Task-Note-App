@@ -9,11 +9,20 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.PixelFormat;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
+import android.provider.Settings;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -48,6 +57,11 @@ public class MusicService extends Service {
     private int currentResId = -1;
 
     private final IBinder binder = new MusicBinder();
+
+    // Floating window fields
+    private WindowManager windowManager;
+    private View floatingView;
+    private boolean isFloatingVisible = false;
 
     public class MusicBinder extends Binder {
         public MusicService getService() {
@@ -103,6 +117,38 @@ public class MusicService extends Service {
         } else {
             registerReceiver(musicReceiver, filter);
         }
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent == null || intent.getAction() == null) {
+            return START_NOT_STICKY;
+        }
+
+        String action = intent.getAction();
+        switch (action) {
+            case ACTION_PLAY:
+                int resId = intent.getIntExtra(EXTRA_RES_ID, -1);
+                String uriString = intent.getStringExtra(EXTRA_URI);
+                String name = intent.getStringExtra(EXTRA_MUSIC_NAME);
+
+                if (uriString != null) {
+                    playMusicFromUri(Uri.parse(uriString), name);
+                } else if (resId != -1) {
+                    playMusic(resId, name);
+                }
+                break;
+            case ACTION_PAUSE:
+                pauseMusic();
+                break;
+            case ACTION_RESUME:
+                resumeMusic();
+                break;
+            case ACTION_STOP:
+                stopMusic();
+                break;
+        }
+        return START_NOT_STICKY;
     }
 
     private void createNotificationChannel() {
@@ -254,8 +300,123 @@ public class MusicService extends Service {
         return currentResId;
     }
 
+    // ==================== Floating Window ====================
+
+    public void showFloatingPlayer() {
+        if (isFloatingVisible) {
+            updateFloatingPlayer();
+            return;
+        }
+        if (!Settings.canDrawOverlays(this)) {
+            return;
+        }
+        if (currentState == STATE_IDLE) {
+            return;
+        }
+
+        windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+
+        int layoutType;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            layoutType = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+        } else {
+            layoutType = WindowManager.LayoutParams.TYPE_PHONE;
+        }
+
+        final WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                layoutType,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                PixelFormat.TRANSLUCENT);
+        params.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+        params.y = 0;
+
+        LayoutInflater inflater = LayoutInflater.from(this);
+        floatingView = inflater.inflate(R.layout.layout_mini_player, null);
+        floatingView.setVisibility(View.VISIBLE);
+
+        // Wire up controls
+        TextView tvName = floatingView.findViewById(R.id.tv_mini_player_name);
+        ImageButton btnPlayPause = floatingView.findViewById(R.id.btn_mini_play_pause);
+        ImageButton btnStop = floatingView.findViewById(R.id.btn_mini_stop);
+
+        tvName.setText(currentMusicName);
+        btnPlayPause.setImageResource(currentState == STATE_PLAYING ? R.drawable.ic_pause : R.drawable.ic_play);
+
+        btnPlayPause.setOnClickListener(v -> {
+            if (currentState == STATE_PLAYING) {
+                pauseMusic();
+            } else if (currentState == STATE_PAUSED) {
+                resumeMusic();
+            }
+            updateFloatingPlayer();
+        });
+
+        btnStop.setOnClickListener(v -> {
+            stopMusic();
+            hideFloatingPlayer();
+        });
+
+        // Drag support
+        floatingView.setOnTouchListener(new View.OnTouchListener() {
+            private int initialY;
+            private float initialTouchY;
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        initialY = params.y;
+                        initialTouchY = event.getRawY();
+                        return true;
+                    case MotionEvent.ACTION_MOVE:
+                        // Invert because gravity is BOTTOM
+                        params.y = initialY - (int) (event.getRawY() - initialTouchY);
+                        if (windowManager != null && floatingView != null) {
+                            windowManager.updateViewLayout(floatingView, params);
+                        }
+                        return true;
+                }
+                return false;
+            }
+        });
+
+        try {
+            windowManager.addView(floatingView, params);
+            isFloatingVisible = true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void hideFloatingPlayer() {
+        if (floatingView != null && isFloatingVisible) {
+            try {
+                windowManager.removeView(floatingView);
+            } catch (Exception ignored) {}
+            floatingView = null;
+            isFloatingVisible = false;
+        }
+    }
+
+    private void updateFloatingPlayer() {
+        if (floatingView == null || !isFloatingVisible) return;
+        TextView tvName = floatingView.findViewById(R.id.tv_mini_player_name);
+        ImageButton btnPlayPause = floatingView.findViewById(R.id.btn_mini_play_pause);
+        tvName.setText(currentMusicName);
+        btnPlayPause.setImageResource(currentState == STATE_PLAYING ? R.drawable.ic_pause : R.drawable.ic_play);
+    }
+
+    public boolean isFloatingVisible() {
+        return isFloatingVisible;
+    }
+
+    // ==================== Lifecycle ====================
+
     @Override
     public void onDestroy() {
+        hideFloatingPlayer();
         stopMusicInternal();
         try {
             unregisterReceiver(musicReceiver);

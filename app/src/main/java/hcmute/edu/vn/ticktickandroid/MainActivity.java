@@ -6,9 +6,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.Settings;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -53,6 +55,7 @@ import hcmute.edu.vn.ticktickandroid.Fragment.MusicPickerFragment;
 import hcmute.edu.vn.ticktickandroid.Fragment.NotificationFragment;
 import hcmute.edu.vn.ticktickandroid.Fragment.TimerFragment;
 import hcmute.edu.vn.ticktickandroid.Notification.NotificationDao;
+import hcmute.edu.vn.ticktickandroid.Service.MusicService;
 import hcmute.edu.vn.ticktickandroid.Service.TaskReminderService;
 import hcmute.edu.vn.ticktickandroid.Task.TaskDao;
 import hcmute.edu.vn.ticktickandroid.Task.TaskEntity;
@@ -93,6 +96,8 @@ public class MainActivity extends AppCompatActivity {
 
     private TaskReminderService taskReminderService;
     private boolean isBound = false;
+    private MusicService musicService;
+    private boolean isMusicBound = false;
 
     private final ActivityResultLauncher<String[]> requestPermissionsLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
@@ -113,6 +118,20 @@ public class MainActivity extends AppCompatActivity {
         }
         @Override
         public void onServiceDisconnected(ComponentName name) { isBound = false; }
+    };
+
+    private ServiceConnection musicServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            MusicService.MusicBinder binder = (MusicService.MusicBinder) service;
+            musicService = binder.getService();
+            isMusicBound = true;
+        }
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            isMusicBound = false;
+            musicService = null;
+        }
     };
 
     @Override
@@ -158,6 +177,9 @@ public class MainActivity extends AppCompatActivity {
 
         Intent intent = new Intent(this, TaskReminderService.class);
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+
+        Intent musicIntent = new Intent(this, MusicService.class);
+        bindService(musicIntent, musicServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
     private void checkPermissions() {
@@ -275,12 +297,48 @@ public class MainActivity extends AppCompatActivity {
         if (musicPickerFragment == null) {
             musicPickerFragment = new MusicPickerFragment();
             musicPickerFragment.setListener(new MusicPickerFragment.OnMusicSelectedListener() {
-                @Override public void onMusicSelected(int resId, String name) {}
-                @Override public void onFileSelected(android.net.Uri uri, String name) {}
-                @Override public void onPauseMusic() {}
-                @Override public void onResumeMusic() {}
-                @Override public void onStopMusic() {}
-                @Override public void onBack() { 
+                @Override
+                public void onMusicSelected(int resId, String name) {
+                    checkOverlayPermission();
+                    Intent intent = new Intent(MainActivity.this, hcmute.edu.vn.ticktickandroid.Service.MusicService.class);
+                    intent.setAction(hcmute.edu.vn.ticktickandroid.Service.MusicService.ACTION_PLAY);
+                    intent.putExtra(hcmute.edu.vn.ticktickandroid.Service.MusicService.EXTRA_RES_ID, resId);
+                    intent.putExtra(hcmute.edu.vn.ticktickandroid.Service.MusicService.EXTRA_MUSIC_NAME, name);
+                    startMusicService(intent);
+                }
+
+                @Override
+                public void onFileSelected(Uri uri, String name) {
+                    Intent intent = new Intent(MainActivity.this, hcmute.edu.vn.ticktickandroid.Service.MusicService.class);
+                    intent.setAction(hcmute.edu.vn.ticktickandroid.Service.MusicService.ACTION_PLAY);
+                    intent.putExtra(hcmute.edu.vn.ticktickandroid.Service.MusicService.EXTRA_URI, uri.toString());
+                    intent.putExtra(hcmute.edu.vn.ticktickandroid.Service.MusicService.EXTRA_MUSIC_NAME, name);
+                    startMusicService(intent);
+                }
+
+                @Override
+                public void onPauseMusic() {
+                    Intent intent = new Intent(MainActivity.this, hcmute.edu.vn.ticktickandroid.Service.MusicService.class);
+                    intent.setAction(hcmute.edu.vn.ticktickandroid.Service.MusicService.ACTION_PAUSE);
+                    startMusicService(intent);
+                }
+
+                @Override
+                public void onResumeMusic() {
+                    Intent intent = new Intent(MainActivity.this, hcmute.edu.vn.ticktickandroid.Service.MusicService.class);
+                    intent.setAction(hcmute.edu.vn.ticktickandroid.Service.MusicService.ACTION_RESUME);
+                    startMusicService(intent);
+                }
+
+                @Override
+                public void onStopMusic() {
+                    Intent intent = new Intent(MainActivity.this, hcmute.edu.vn.ticktickandroid.Service.MusicService.class);
+                    intent.setAction(hcmute.edu.vn.ticktickandroid.Service.MusicService.ACTION_STOP);
+                    startMusicService(intent);
+                }
+
+                @Override
+                public void onBack() {
                     if (lastUiState == R.id.nav_tasks) showTasksUi();
                     else if (lastUiState == R.id.nav_contacts) showContactsUi();
                     else if (lastUiState == R.id.nav_timer) showTimerUi();
@@ -491,6 +549,39 @@ public class MainActivity extends AppCompatActivity {
         taskAdapter.setSelectionMode(false);
     }
 
+    private void startMusicService(Intent intent) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent);
+        } else {
+            startService(intent);
+        }
+    }
+
+    private void checkOverlayPermission() {
+        if (!Settings.canDrawOverlays(this)) {
+            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:" + getPackageName()));
+            startActivity(intent);
+            Toast.makeText(this, "Vui lòng cấp quyền hiển thị trên ứng dụng khác để hiện miniplayer", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    protected void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        if (isMusicBound && musicService != null && musicService.getCurrentState() != MusicService.STATE_IDLE) {
+            musicService.showFloatingPlayer();
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (isMusicBound && musicService != null) {
+            musicService.hideFloatingPlayer();
+        }
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -498,21 +589,9 @@ public class MainActivity extends AppCompatActivity {
             unbindService(serviceConnection);
             isBound = false;
         }
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            drawerLayout.closeDrawer(GravityCompat.START);
-        } else if (taskAdapter != null && taskAdapter.isSelectionMode()) {
-            taskAdapter.setSelectionMode(false);
-        } else if (musicPickerFragment != null && musicPickerFragment.isVisible()) {
-            if (lastUiState == R.id.nav_tasks) showTasksUi();
-            else if (lastUiState == R.id.nav_contacts) showContactsUi();
-            else if (lastUiState == R.id.nav_timer) showTimerUi();
-            else super.onBackPressed();
-        } else {
-            super.onBackPressed();
+        if (isMusicBound) {
+            unbindService(musicServiceConnection);
+            isMusicBound = false;
         }
     }
 }
