@@ -15,7 +15,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textColor="@color/drawerItemText"
+        android:textColor="@color/PrimaryText"
         android:textSize="15sp" />
 
     <TextView
@@ -23,7 +23,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
-        android:textColor="@color/textSecondary"
+        android:textColor="@color/SecondaryText"
         android:textSize="13sp" />
 
     <ImageView

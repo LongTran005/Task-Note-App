@@ -1,19 +1,19 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme - forced dark -->
-    <style name="Base.Theme.TickTickAndroid" parent="Theme.Material3.Dark.NoActionBar">
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorOnPrimary">@color/white</item>
-        <item name="colorSurface">@color/colorSurface</item>
-        <item name="android:windowIsTranslucent">true</item>
+    <!-- Base application theme - Material Light -->
+    <style name="Base.Theme.TickTickAndroid" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/PrimaryColor</item>
+        <item name="colorOnPrimary">@color/Text_icons</item>
+        <item name="colorSecondary">@color/AccentColor</item>
+        <item name="colorSurface">@color/white</item>
         <item name="android:windowBackground">@color/colorBackground</item>
-        <item name="android:statusBarColor">@color/colorBackground</item>
-        <item name="android:navigationBarColor">@color/bottomNavBackground</item>
+        <item name="android:statusBarColor">@color/DarkPrimaryColor</item>
+        <item name="android:navigationBarColor">@color/white</item>
     </style>
 
     <style name="Theme.TickTickAndroid" parent="Base.Theme.TickTickAndroid" />
 
     <style name="Theme.TickTick.Splash" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/white</item>
+        <item name="windowSplashScreenBackground">@color/PrimaryColor</item>
         <item name="windowSplashScreenAnimatedIcon">@android:color/transparent</item>
         <item name="postSplashScreenTheme">@style/Theme.TickTickAndroid</item>
     </style>

@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:text="Focus Timer"
         android:textSize="24sp"
-        android:textColor="@color/textPrimary"
+        android:textColor="@color/PrimaryText"
         android:textStyle="bold"
         android:layout_marginBottom="40dp" />
 
@@ -22,7 +22,7 @@
         android:layout_height="250dp"
         app:cardCornerRadius="125dp"
         app:cardElevation="8dp"
-        app:cardBackgroundColor="@color/colorToolbar"
+        app:cardBackgroundColor="@color/PrimaryColor"
         android:layout_marginBottom="40dp">
         
         <TextView
@@ -32,7 +32,7 @@
             android:layout_gravity="center"
             android:text="25:00"
             android:textSize="64sp"
-            android:textColor="@color/textPrimary"
+            android:textColor="@color/Text_icons"
             android:textStyle="bold" />
     </com.google.android.material.card.MaterialCardView>
 
@@ -49,7 +49,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Reset"
-            android:textColor="@color/textSecondary"
+            android:textColor="@color/SecondaryText"
             android:layout_marginEnd="16dp" />
 
         <com.google.android.material.button.MaterialButton

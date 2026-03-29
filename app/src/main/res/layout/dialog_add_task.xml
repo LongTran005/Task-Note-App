@@ -10,7 +10,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Thêm nhiệm vụ"
-        android:textColor="@color/colorBackground"
+        android:textColor="@color/PrimaryText"
         android:textSize="18sp"
         android:textStyle="bold"
         android:layout_marginBottom="16dp" />
@@ -25,7 +25,7 @@
             android:id="@+id/et_task_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/colorBackground"
+            android:textColor="@color/PrimaryText"
             android:inputType="text" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -34,7 +34,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Nhóm"
-        android:textColor="@color/colorBackground"
+        android:textColor="@color/PrimaryText"
         android:textSize="14sp"
         android:layout_marginBottom="8dp" />
 
@@ -42,7 +42,7 @@
         android:id="@+id/spinner_group"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:backgroundTint="@color/textSecondary" />
+        android:backgroundTint="@color/SecondaryText" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_pick_date"
@@ -57,7 +57,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Thời gian"
-        android:textColor="@color/textSecondary"
+        android:textColor="@color/SecondaryText"
         android:textSize="14sp"
         android:layout_marginTop="12dp"
         android:layout_marginBottom="4dp" />
@@ -94,7 +94,7 @@
                 android:inputType="number"
                 android:maxLength="2"
                 android:text="00"
-                android:textColor="@color/colorBackground"
+                android:textColor="@color/PrimaryText"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:background="@android:color/transparent" />
@@ -113,7 +113,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text=":"
-            android:textColor="@color/textPrimary"
+            android:textColor="@color/PrimaryText"
             android:textSize="20sp"
             android:textStyle="bold" />
 
@@ -141,7 +141,7 @@
                 android:inputType="number"
                 android:maxLength="2"
                 android:text="00"
-                android:textColor="@color/colorBackground"
+                android:textColor="@color/PrimaryText"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:background="@android:color/transparent" />
@@ -160,7 +160,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text=":"
-            android:textColor="@color/textPrimary"
+            android:textColor="@color/PrimaryText"
             android:textSize="20sp"
             android:textStyle="bold" />
 
@@ -189,7 +189,7 @@
                 android:inputType="number"
                 android:maxLength="2"
                 android:text="00"
-                android:textColor="@color/colorBackground"
+                android:textColor="@color/PrimaryText"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:background="@android:color/transparent" />
@@ -210,7 +210,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:textColor="@color/textSecondary"
+        android:textColor="@color/SecondaryText"
         android:textSize="13sp"
         android:visibility="gone" />
 

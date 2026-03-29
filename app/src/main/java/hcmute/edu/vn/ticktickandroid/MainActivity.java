@@ -5,16 +5,20 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ExpandableListView;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -37,6 +41,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
@@ -45,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 
 import hcmute.edu.vn.ticktickandroid.Adapter.DrawerCategoryAdapter;
+import hcmute.edu.vn.ticktickandroid.Adapter.DrawerTimerPresetAdapter;
 import hcmute.edu.vn.ticktickandroid.Adapter.TaskExpandableListAdapter;
 import hcmute.edu.vn.ticktickandroid.Category.Category;
 import hcmute.edu.vn.ticktickandroid.Category.CategoryDao;
@@ -85,7 +91,12 @@ public class MainActivity extends AppCompatActivity {
     private Map<String, List<TaskEntity>> taskMap = new LinkedHashMap<>();
 
     private DrawerCategoryAdapter drawerAdapter;
+    private DrawerTimerPresetAdapter timerPresetAdapter;
     private TaskExpandableListAdapter taskAdapter;
+
+    private LinearLayout drawerCategorySection;
+    private LinearLayout drawerTimerSection;
+    private List<Integer> timerPresets = new ArrayList<>();
 
     private TimerFragment timerFragment;
     private ContactFragment contactFragment;
@@ -159,6 +170,7 @@ public class MainActivity extends AppCompatActivity {
         setupToolbar();
         setupBottomNav();
         setupDrawer();
+        setupTimerDrawer();
 
         fabAdd.setOnClickListener(v ->
                 TaskDialogHelper.showAddDialog(this, taskDao, categoryDao, currentCategory, this::refreshAll));
@@ -255,6 +267,7 @@ public class MainActivity extends AppCompatActivity {
         hideAllFragments();
         refreshTaskList(); 
         updateFabVisibility();
+        switchDrawerSection(false);
     }
 
     private void showContactsUi() {
@@ -270,6 +283,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             getSupportFragmentManager().beginTransaction().show(contactFragment).commit();
         }
+        switchDrawerSection(false);
     }
 
     private void showTimerUi() {
@@ -285,6 +299,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             getSupportFragmentManager().beginTransaction().show(timerFragment).commit();
         }
+        switchDrawerSection(true);
     }
 
     private void showMusicPickerUi() {
@@ -394,6 +409,130 @@ public class MainActivity extends AppCompatActivity {
                 });
         rvDrawerCategories.setAdapter(drawerAdapter);
         refreshDrawerCategories();
+
+        drawerCategorySection = findViewById(R.id.drawer_category_section);
+        drawerTimerSection = findViewById(R.id.drawer_timer_section);
+    }
+
+    private void setupTimerDrawer() {
+        RecyclerView rvTimerPresets = findViewById(R.id.rv_drawer_timer_presets);
+        rvTimerPresets.setLayoutManager(new LinearLayoutManager(this));
+
+        loadTimerPresets();
+
+        timerPresetAdapter = new DrawerTimerPresetAdapter(timerPresets, 0, totalSeconds -> {
+            if (timerFragment != null) {
+                timerFragment.setTimerDuration(totalSeconds * 1000L);
+            }
+            drawerLayout.closeDrawer(GravityCompat.START);
+        });
+        timerPresetAdapter.setOnPresetLongClickListener((position, totalSeconds) -> {
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle("Xóa thời gian")
+                    .setMessage("Bạn có muốn xóa thời gian này?")
+                    .setPositiveButton("Xóa", (d, w) -> {
+                        timerPresetAdapter.removePreset(position);
+                        timerPresets.remove(position);
+                        saveTimerPresets();
+                    })
+                    .setNegativeButton("Hủy", null)
+                    .show();
+        });
+        rvTimerPresets.setAdapter(timerPresetAdapter);
+
+        findViewById(R.id.btn_add_timer).setOnClickListener(v -> showTimerAddPresetDialog());
+    }
+
+    private void switchDrawerSection(boolean showTimer) {
+        if (drawerCategorySection != null && drawerTimerSection != null) {
+            drawerCategorySection.setVisibility(showTimer ? View.GONE : View.VISIBLE);
+            drawerTimerSection.setVisibility(showTimer ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    private void showTimerAddPresetDialog() {
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_timer_preset, null);
+        EditText etHour = dialogView.findViewById(R.id.et_hour);
+        EditText etMinute = dialogView.findViewById(R.id.et_minute);
+        EditText etSecond = dialogView.findViewById(R.id.et_second);
+
+        ImageButton btnHourUp = dialogView.findViewById(R.id.btn_hour_up);
+        ImageButton btnHourDown = dialogView.findViewById(R.id.btn_hour_down);
+        ImageButton btnMinuteUp = dialogView.findViewById(R.id.btn_minute_up);
+        ImageButton btnMinuteDown = dialogView.findViewById(R.id.btn_minute_down);
+        ImageButton btnSecondUp = dialogView.findViewById(R.id.btn_second_up);
+        ImageButton btnSecondDown = dialogView.findViewById(R.id.btn_second_down);
+
+        btnHourUp.setOnClickListener(v -> {
+            int val = Integer.parseInt(etHour.getText().toString());
+            etHour.setText(String.format("%02d", Math.min(val + 1, 23)));
+        });
+        btnHourDown.setOnClickListener(v -> {
+            int val = Integer.parseInt(etHour.getText().toString());
+            etHour.setText(String.format("%02d", Math.max(val - 1, 0)));
+        });
+        btnMinuteUp.setOnClickListener(v -> {
+            int val = Integer.parseInt(etMinute.getText().toString());
+            etMinute.setText(String.format("%02d", Math.min(val + 1, 59)));
+        });
+        btnMinuteDown.setOnClickListener(v -> {
+            int val = Integer.parseInt(etMinute.getText().toString());
+            etMinute.setText(String.format("%02d", Math.max(val - 1, 0)));
+        });
+        btnSecondUp.setOnClickListener(v -> {
+            int val = Integer.parseInt(etSecond.getText().toString());
+            etSecond.setText(String.format("%02d", Math.min(val + 1, 59)));
+        });
+        btnSecondDown.setOnClickListener(v -> {
+            int val = Integer.parseInt(etSecond.getText().toString());
+            etSecond.setText(String.format("%02d", Math.max(val - 1, 0)));
+        });
+
+        new MaterialAlertDialogBuilder(this)
+                .setView(dialogView)
+                .setPositiveButton("Thêm", (d, w) -> {
+                    int h = Integer.parseInt(etHour.getText().toString());
+                    int m = Integer.parseInt(etMinute.getText().toString());
+                    int s = Integer.parseInt(etSecond.getText().toString());
+                    int total = h * 3600 + m * 60 + s;
+                    if (total > 0) {
+                        timerPresets.add(total);
+                        timerPresetAdapter.addPreset(total);
+                        saveTimerPresets();
+                    }
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    private void loadTimerPresets() {
+        SharedPreferences prefs = getSharedPreferences("timer_presets", MODE_PRIVATE);
+        int count = prefs.getInt("count", -1);
+        timerPresets.clear();
+        if (count == -1) {
+            // Default presets
+            timerPresets.add(5 * 60);
+            timerPresets.add(10 * 60);
+            timerPresets.add(15 * 60);
+            timerPresets.add(25 * 60);
+            timerPresets.add(30 * 60);
+            timerPresets.add(45 * 60);
+            timerPresets.add(60 * 60);
+            saveTimerPresets();
+        } else {
+            for (int i = 0; i < count; i++) {
+                timerPresets.add(prefs.getInt("preset_" + i, 25 * 60));
+            }
+        }
+    }
+
+    private void saveTimerPresets() {
+        SharedPreferences.Editor editor = getSharedPreferences("timer_presets", MODE_PRIVATE).edit();
+        editor.putInt("count", timerPresets.size());
+        for (int i = 0; i < timerPresets.size(); i++) {
+            editor.putInt("preset_" + i, timerPresets.get(i));
+        }
+        editor.apply();
     }
 
     private void refreshAll() {

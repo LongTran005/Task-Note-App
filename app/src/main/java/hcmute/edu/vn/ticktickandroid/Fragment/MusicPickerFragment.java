@@ -291,7 +291,7 @@ public class MusicPickerFragment extends Fragment {
                 holder.itemView.setBackgroundResource(R.drawable.bg_music_item);
                 holder.ivPlayIndicator.setVisibility(View.GONE);
                 holder.tvSubtitle.setText("Nhạc mặc định");
-                holder.tvSubtitle.setTextColor(holder.itemView.getContext().getResources().getColor(R.color.textSecondary));
+                holder.tvSubtitle.setTextColor(holder.itemView.getContext().getResources().getColor(R.color.SecondaryText));
             }
 
             holder.itemView.setOnClickListener(v -> {

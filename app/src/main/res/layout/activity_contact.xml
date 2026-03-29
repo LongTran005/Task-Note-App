@@ -14,13 +14,13 @@
             android:id="@+id/toolbar_contact"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/colorToolbar">
+            android:background="@color/PrimaryColor">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Quản lý danh bạ"
-                android:textColor="@color/textPrimary"
+                android:textColor="@color/PrimaryText"
                 android:textSize="18sp"
                 android:textStyle="bold" />
         </androidx.appcompat.widget.Toolbar>
@@ -35,8 +35,8 @@
             android:drawablePadding="8dp"
             android:hint="Tìm kiếm danh bạ..."
             android:padding="12dp"
-            android:textColor="@color/textPrimary"
-            android:textColorHint="@color/textSecondary" />
+            android:textColor="@color/PrimaryText"
+            android:textColorHint="@color/SecondaryText" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_contacts"
@@ -51,7 +51,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
-            android:backgroundTint="@color/colorPrimary"
+            android:backgroundTint="@color/PrimaryColor"
             android:text="Gửi SMS cho người đã chọn"
             android:textColor="@android:color/white"
             android:visibility="gone" />
@@ -66,6 +66,6 @@
         android:layout_marginBottom="80dp"
         app:srcCompat="@drawable/ic_add"
         app:tint="@android:color/white"
-        android:backgroundTint="@color/colorPrimary"/>
+        android:backgroundTint="@color/PrimaryColor"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

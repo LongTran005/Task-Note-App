@@ -23,7 +23,7 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:layout_marginStart="12dp"
-        android:textColor="@color/drawerItemText"
+        android:textColor="@color/PrimaryText"
         android:textSize="15sp" />
 
     <ImageView

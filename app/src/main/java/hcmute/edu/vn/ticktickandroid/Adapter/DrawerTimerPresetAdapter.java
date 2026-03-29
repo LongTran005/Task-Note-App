@@ -72,9 +72,9 @@ public class DrawerTimerPresetAdapter extends RecyclerView.Adapter<DrawerTimerPr
         holder.ivCheck.setVisibility(position == selectedIndex ? View.VISIBLE : View.GONE);
 
         if (position == selectedIndex) {
-            holder.tvLabel.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.colorPrimary));
+            holder.tvLabel.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.PrimaryColor));
         } else {
-            holder.tvLabel.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.drawerItemText));
+            holder.tvLabel.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.PrimaryText));
         }
 
         holder.itemView.setOnClickListener(v -> {

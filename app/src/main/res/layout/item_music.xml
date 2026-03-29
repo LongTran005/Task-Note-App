@@ -41,7 +41,7 @@
             android:layout_height="wrap_content"
             android:text="Tên bài hát"
             android:textSize="15sp"
-            android:textColor="@color/textPrimary"
+            android:textColor="@color/PrimaryText"
             android:singleLine="true"
             android:ellipsize="end" />
 
@@ -51,7 +51,7 @@
             android:layout_height="wrap_content"
             android:text="Nhạc mặc định"
             android:textSize="12sp"
-            android:textColor="@color/textSecondary"
+            android:textColor="@color/SecondaryText"
             android:layout_marginTop="2dp" />
     </LinearLayout>
 

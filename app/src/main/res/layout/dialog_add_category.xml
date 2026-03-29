@@ -9,7 +9,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Thêm danh mục"
-        android:textColor="@color/colorBackground"
+        android:textColor="@color/PrimaryText"
         android:textSize="18sp"
         android:textStyle="bold"
         android:layout_marginBottom="16dp" />
@@ -23,7 +23,7 @@
             android:id="@+id/et_category_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/colorBackground"
+            android:textColor="@color/PrimaryText"
             android:inputType="text" />
     </com.google.android.material.textfield.TextInputLayout>
 

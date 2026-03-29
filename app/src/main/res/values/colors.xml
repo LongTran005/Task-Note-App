@@ -3,34 +3,24 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="colorPrimary">#4B7BEC</color>
-    <color name="colorPrimaryDark">#3867D6</color>
-    <color name="colorAccent">#4B7BEC</color>
-
     <color name="colorBackground">#FFFFFFFF</color>
-    <color name="colorSurface">#FF000000</color>
-    <color name="colorToolbar">#55CE5B</color>
-
-    <color name="drawerBackground">#A6ABA6</color>
-    <color name="drawerItemText">#383333</color>
-    <color name="drawerDivider">#FF333333</color>
-
-    <color name="textPrimary">#FF000000</color>
-    <color name="textSecondary">#403838</color>
-
-    <color name="bottomNavBackground">#FF111111</color>
-    <color name="bottomNavActive">#4B7BEC</color>
-    <color name="bottomNavInactive">#FF666666</color>
-
-    <color name="fabColor">#4B7BEC</color>
+    <color name="bottomNavBackground">#FFFFFFFF</color>
     <color name="fabIconColor">#FFFFFFFF</color>
-    <color name="badgeBlue">#4B7BEC</color>
 
-    <color name="musicPrimary">#6C5CE7</color>
-    <color name="musicSecondary">#A29BFE</color>
-    <color name="musicGradientStart">#6C5CE7</color>
-    <color name="musicGradientEnd">#A29BFE</color>
-    <color name="nowPlayingBg">#1A6C5CE7</color>
-    <color name="miniPlayerBg">#6C5CE7</color>
+    <color name="musicPrimary">#009688</color>
+    <color name="musicSecondary">#B2DFDB</color>
+    <color name="musicGradientStart">#00796B</color>
+    <color name="musicGradientEnd">#009688</color>
+    <color name="nowPlayingBg">#1A009688</color>
+    <color name="miniPlayerBg">#009688</color>
     <color name="musicTextOnPrimary">#FFFFFF</color>
+
+    <color name="DarkPrimaryColor">#00796B</color>
+    <color name="LightPrimaryColor">#B2DFDB</color>
+    <color name="PrimaryColor">#009688</color>
+    <color name="Text_icons">#FFFFFF</color>
+    <color name="PrimaryText">#212121</color>
+    <color name="SecondaryText">#757575</color>
+    <color name="AccentColor">#03A9F4</color>
+    <color name="DividerColor">#BDBDBD</color>
 </resources>

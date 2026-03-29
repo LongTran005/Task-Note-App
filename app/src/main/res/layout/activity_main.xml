@@ -19,23 +19,24 @@
             android:id="@+id/appBarLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/colorToolbar"
+            android:background="@color/PrimaryColor"
             app:elevation="0dp">
 
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
-                android:background="@color/colorToolbar"
-                app:titleTextColor="@color/textPrimary"
-                app:navigationIcon="@drawable/ic_menu">
+                android:background="@color/PrimaryColor"
+                app:titleTextColor="@color/Text_icons"
+                app:navigationIcon="@drawable/ic_menu"
+                app:navigationIconTint="@color/Text_icons">
 
                 <TextView
                     android:id="@+id/toolbar_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/welcome"
-                    android:textColor="@color/textPrimary"
+                    android:textColor="@color/Text_icons"
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
@@ -61,6 +62,7 @@
                             android:layout_height="24dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_notification_off"
+                            app:tint="@color/Text_icons"
                             android:contentDescription="Notifications" />
 
                         <TextView
@@ -70,7 +72,7 @@
                             android:layout_gravity="top|end"
                             android:layout_marginTop="4dp"
                             android:layout_marginEnd="2dp"
-                            android:background="@color/colorPrimary"
+                            android:background="@color/AccentColor"
                             android:gravity="center"
                             android:textColor="@android:color/white"
                             android:textSize="10sp"
@@ -117,7 +119,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="24dp"
                     android:text="@string/no_tasks"
-                    android:textColor="@color/textPrimary"
+                    android:textColor="@color/PrimaryText"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
@@ -126,7 +128,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:text="@string/hint_add_task"
-                    android:textColor="@color/textSecondary"
+                    android:textColor="@color/SecondaryText"
                     android:textSize="14sp" />
             </LinearLayout>
 
@@ -152,7 +154,7 @@
             android:layout_marginBottom="80dp"
             android:contentDescription="Add task"
             android:src="@drawable/ic_add"
-            app:backgroundTint="@color/fabColor"
+            app:backgroundTint="@color/AccentColor"
             app:tint="@color/fabIconColor"
             app:fabSize="normal" />
 
@@ -169,9 +171,11 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:background="@color/bottomNavBackground"
-            app:itemIconTint="@color/bottomNavInactive"
-            app:itemTextColor="@color/bottomNavInactive"
-            app:labelVisibilityMode="unlabeled"
+            app:itemActiveIndicatorStyle="@null"
+            app:itemIconTint="@color/PrimaryColor"
+            app:itemTextColor="@color/PrimaryColor"
+            app:labelVisibilityMode="labeled"
+            app:elevation="8dp"
             app:menu="@menu/bottom_nav_menu" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -31,7 +31,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="Không có thông báo"
-            android:textColor="@color/textSecondary"
+            android:textColor="@color/SecondaryText"
             android:textSize="16sp" />
     </LinearLayout>
 
