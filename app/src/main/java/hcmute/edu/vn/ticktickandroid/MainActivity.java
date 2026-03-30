@@ -55,6 +55,7 @@ import hcmute.edu.vn.ticktickandroid.Adapter.TaskExpandableListAdapter;
 import hcmute.edu.vn.ticktickandroid.Category.Category;
 import hcmute.edu.vn.ticktickandroid.Category.CategoryDao;
 import hcmute.edu.vn.ticktickandroid.Database.AppDatabase;
+import hcmute.edu.vn.ticktickandroid.Dialog.CategoryDialogHelper;
 import hcmute.edu.vn.ticktickandroid.Dialog.TaskDialogHelper;
 import hcmute.edu.vn.ticktickandroid.Fragment.ContactFragment;
 import hcmute.edu.vn.ticktickandroid.Fragment.MusicPickerFragment;
@@ -102,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
     private ContactFragment contactFragment;
     private MusicPickerFragment musicPickerFragment;
     private NotificationFragment notificationFragment;
+    private hcmute.edu.vn.ticktickandroid.Fragment.CalendarFragment calendarFragment;
 
     private int lastUiState = R.id.nav_tasks;
 
@@ -263,7 +265,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showTasksUi() {
-        toolbarTitle.setText(currentCategory != null ? currentCategory.getName() : "Công việc");
+        currentCategory = null;
+        toolbarTitle.setText("Công việc");
         hideAllFragments();
         refreshTaskList(); 
         updateFabVisibility();
@@ -384,12 +387,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void hideAllFragments() {
-        Fragment[] fragments = {timerFragment, contactFragment, musicPickerFragment, notificationFragment};
+        Fragment[] fragments = {timerFragment, contactFragment, musicPickerFragment, notificationFragment, calendarFragment};
         for (Fragment f : fragments) {
             if (f != null && f.isAdded()) {
                 getSupportFragmentManager().beginTransaction().hide(f).commit();
             }
         }
+    }
+
+    private void showCalendarUi() {
+        emptyState.setVisibility(View.GONE);
+        expandableListView.setVisibility(View.GONE);
+        fabAdd.hide();
+        toolbarTitle.setText("Lịch");
+
+        hideAllFragments();
+        if (calendarFragment == null) {
+            calendarFragment = new hcmute.edu.vn.ticktickandroid.Fragment.CalendarFragment();
+            getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, calendarFragment).commit();
+        } else {
+            getSupportFragmentManager().beginTransaction().show(calendarFragment).commit();
+        }
+        switchDrawerSection(false);
     }
 
     private void setupDrawer() {
@@ -402,16 +421,42 @@ public class MainActivity extends AppCompatActivity {
                         currentCategory = category;
                         toolbarTitle.setText(category.getName());
                         drawerLayout.closeDrawer(GravityCompat.START);
-                        showTasksUi();
+                        refreshTaskList();
+                        updateFabVisibility();
                     }
-                    @Override public void onEdit(Category category) {}
-                    @Override public void onDelete(Category category) {}
+                    @Override
+                    public void onEdit(Category category) {
+                        CategoryDialogHelper.showEditDialog(MainActivity.this, category, categoryDao, () -> refreshAll());
+                    }
+                    @Override
+                    public void onDelete(Category category) {
+                        CategoryDialogHelper.confirmDelete(MainActivity.this, category, categoryDao, () -> {
+                            if (currentCategory != null && currentCategory.getId() == category.getId()) {
+                                currentCategory = null;
+                                toolbarTitle.setText("Công việc");
+                            }
+                            refreshAll();
+                        });
+                    }
                 });
         rvDrawerCategories.setAdapter(drawerAdapter);
         refreshDrawerCategories();
 
         drawerCategorySection = findViewById(R.id.drawer_category_section);
         drawerTimerSection = findViewById(R.id.drawer_timer_section);
+
+        findViewById(R.id.btn_add_category).setOnClickListener(v ->
+                CategoryDialogHelper.showAddDialog(this, categoryDao, this::refreshAll));
+
+        findViewById(R.id.btn_drawer_tasks).setOnClickListener(v -> {
+            drawerLayout.closeDrawer(GravityCompat.START);
+            showTasksUi();
+        });
+
+        findViewById(R.id.btn_drawer_calendar).setOnClickListener(v -> {
+            drawerLayout.closeDrawer(GravityCompat.START);
+            showCalendarUi();
+        });
     }
 
     private void setupTimerDrawer() {

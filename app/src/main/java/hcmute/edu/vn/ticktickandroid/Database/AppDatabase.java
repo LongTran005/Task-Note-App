@@ -15,10 +15,12 @@ import hcmute.edu.vn.ticktickandroid.Notification.NotificationDao;
 import hcmute.edu.vn.ticktickandroid.Notification.NotificationEntity;
 import hcmute.edu.vn.ticktickandroid.Task.TaskEntity;
 import hcmute.edu.vn.ticktickandroid.Task.TaskDao;
+import hcmute.edu.vn.ticktickandroid.Reminder.ReminderEntity;
+import hcmute.edu.vn.ticktickandroid.Reminder.ReminderDao;
 
 import hcmute.edu.vn.ticktickandroid.Contact.ContactEntity;
 
-@Database(entities = {Category.class, TaskEntity.class, NotificationEntity.class, ContactEntity.class}, version = 4, exportSchema = false)
+@Database(entities = {Category.class, TaskEntity.class, NotificationEntity.class, ContactEntity.class, ReminderEntity.class}, version = 5, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
     private static volatile AppDatabase INSTANCE;
 
@@ -26,6 +28,7 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract TaskDao taskDao();
     public abstract NotificationDao notificationDao();
     public abstract hcmute.edu.vn.ticktickandroid.Contact.ContactDao contactDao();
+    public abstract ReminderDao reminderDao();
 
     static final Migration MIGRATION_1_2 = new Migration(1, 2) {
         @Override
@@ -58,6 +61,17 @@ public abstract class AppDatabase extends RoomDatabase {
         }
     };
 
+    static final Migration MIGRATION_4_5 = new Migration(4, 5) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS reminders (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                    "name TEXT, " +
+                    "reminderTime INTEGER NOT NULL, " +
+                    "createdAt INTEGER NOT NULL)");
+        }
+    };
+
     public static AppDatabase getInstance(Context context) {
         if (INSTANCE == null) {
             synchronized (AppDatabase.class) {
@@ -67,7 +81,7 @@ public abstract class AppDatabase extends RoomDatabase {
                             AppDatabase.class,
                             "ticktick_db"
                     ).allowMainThreadQueries()
-                     .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                     .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                      .build();
 
                     if (INSTANCE.categoryDao().getCount() == 0) {

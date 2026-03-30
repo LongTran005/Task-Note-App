@@ -12,6 +12,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
 
     <application
         android:allowBackup="true"
@@ -60,6 +62,10 @@
                 <action android:name="hcmute.edu.vn.ticktickandroid.ACTION_STOP" />
             </intent-filter>
         </receiver>
+
+        <receiver
+            android:name=".Receiver.TaskAlarmReceiver"
+            android:exported="false" />
 
         <activity
             android:name=".ContactActivity"

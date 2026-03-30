@@ -23,6 +23,12 @@ public interface TaskDao {
     @Query("SELECT * FROM tasks WHERE id = :id")
     Cursor getTaskByIdCursor(long id);
 
+    @Query("SELECT * FROM tasks WHERE dueDate BETWEEN :start AND :end ORDER BY dueDate ASC")
+    List<TaskEntity> getByDateRange(long start, long end);
+
+    @Query("SELECT * FROM tasks WHERE dueDate > 0 ORDER BY dueDate ASC")
+    List<TaskEntity> getTasksWithDueDate();
+
     @Insert
     long insert(TaskEntity task);
 
